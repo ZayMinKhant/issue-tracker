@@ -1,3 +1,4 @@
+const fs = require('fs');
 const path = require('path');
 const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 
@@ -9,15 +10,23 @@ const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
  */
 const projectRoot = __dirname;
 const workspaceRoot = path.resolve(projectRoot, '../..');
+const workspaceNodeModules = path.resolve(workspaceRoot, 'node_modules');
+const pnpmStoreRoot = path.resolve(workspaceNodeModules, '.pnpm');
+const mobilePackageJson = require('./package.json');
+
+const workspacePackageDirs = Object.keys(mobilePackageJson.dependencies ?? {})
+  .filter((name) => name.startsWith('@issue-tracker/'))
+  .map((name) => path.resolve(workspaceRoot, 'packages', name.split('/')[1]))
+  .filter((directory) => fs.existsSync(directory));
 
 const config = {
-  watchFolders: [workspaceRoot],
+  // Only watch shared workspace packages plus pnpm's real package store.
+  watchFolders: [pnpmStoreRoot, ...workspacePackageDirs],
   resolver: {
-    disableHierarchicalLookup: true,
     enableGlobalPackages: true,
     nodeModulesPaths: [
       path.resolve(projectRoot, 'node_modules'),
-      path.resolve(workspaceRoot, 'node_modules'),
+      workspaceNodeModules,
     ],
   },
 };

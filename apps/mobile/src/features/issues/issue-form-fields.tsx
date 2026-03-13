@@ -9,13 +9,12 @@ import type { Control, FieldErrors, FieldValues, Path } from 'react-hook-form';
 import { Controller } from 'react-hook-form';
 import {
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
-import { ChoiceChip } from '../../components/ui/choice-chip';
+import { SelectField } from '../../components/ui/select-field';
 import { colors } from '../../theme/colors';
 
 type IssueFormShape = {
@@ -127,21 +126,16 @@ export function IssueFormFields<T extends IssueFormShape>({
         control={control}
         name={'category' as Path<T>}
         render={({ field: { onChange, value } }) => (
-          <ScrollView
-            horizontal
-            contentContainerStyle={styles.chipRow}
-            showsHorizontalScrollIndicator={false}
-          >
-            {ISSUE_CATEGORIES.map((category) => (
-              <ChoiceChip
-                disabled={disabled}
-                key={category}
-                label={formatEnumLabel(category)}
-                onPress={() => onChange(category)}
-                selected={value === category}
-              />
-            ))}
-          </ScrollView>
+          <SelectField
+            disabled={disabled}
+            onChange={onChange}
+            options={ISSUE_CATEGORIES.map((category) => ({
+              label: formatEnumLabel(category),
+              value: category,
+            }))}
+            selectedValue={value}
+            title="Issue Category"
+          />
         )}
       />
       <FieldError message={getFieldMessage(errors, 'category')} />
@@ -153,21 +147,16 @@ export function IssueFormFields<T extends IssueFormShape>({
             control={control}
             name={'status' as Path<T>}
             render={({ field: { onChange, value } }) => (
-              <ScrollView
-                horizontal
-                contentContainerStyle={styles.chipRow}
-                showsHorizontalScrollIndicator={false}
-              >
-                {ISSUE_STATUSES.map((status) => (
-                  <ChoiceChip
-                    disabled={disabled}
-                    key={status}
-                    label={statusLabels[status]}
-                    onPress={() => onChange(status)}
-                    selected={value === status}
-                  />
-                ))}
-              </ScrollView>
+              <SelectField
+                disabled={disabled}
+                onChange={onChange}
+                options={ISSUE_STATUSES.map((status) => ({
+                  label: statusLabels[status],
+                  value: status,
+                }))}
+                selectedValue={value}
+                title="Issue Status"
+              />
             )}
           />
           <FieldError message={getFieldMessage(errors, 'status')} />
@@ -199,19 +188,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.surfaceMuted,
     borderColor: colors.line,
-    borderRadius: 20,
+    borderRadius: 10,
     borderWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    minHeight: 46,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
   attachmentButtonLabel: {
     color: colors.text,
     flex: 1,
     fontSize: 14,
-    fontWeight: '600',
     marginRight: 12,
   },
   attachmentHint: {
@@ -222,11 +211,8 @@ const styles = StyleSheet.create({
   attachmentPressed: {
     transform: [{ scale: 0.99 }],
   },
-  chipRow: {
-    paddingTop: 8,
-  },
   fieldError: {
-    color: colors.accent,
+    color: colors.warning,
     fontSize: 12,
     fontWeight: '600',
     marginTop: 6,
@@ -234,9 +220,8 @@ const styles = StyleSheet.create({
   fieldLabel: {
     color: colors.text,
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '600',
     marginTop: 18,
-    textTransform: 'uppercase',
   },
   formCard: {
     backgroundColor: colors.surface,
@@ -248,13 +233,14 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: colors.surfaceMuted,
     borderColor: colors.line,
-    borderRadius: 20,
+    borderRadius: 10,
     borderWidth: 1,
     color: colors.text,
-    fontSize: 15,
+    fontSize: 14,
     marginTop: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    minHeight: 46,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
   inputDisabled: {
     opacity: 0.65,

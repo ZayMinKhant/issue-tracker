@@ -2,6 +2,25 @@ import { render, screen, waitFor } from '@testing-library/react-native';
 import App from '../App';
 import { getIssues } from '../src/features/issues/api';
 
+jest.mock('react-native-select-dropdown', () => {
+  const React = require('react');
+
+  return ({ defaultValue, renderButton }: any) => renderButton(defaultValue, false);
+});
+
+jest.mock('react-native-date-picker', () => () => null);
+
+jest.mock('@react-native-vector-icons/lucide', () => ({
+  Lucide: () => null,
+}));
+
+jest.mock('react-native-linear-gradient', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+
+  return ({ children }: { children?: React.ReactNode }) => <View>{children}</View>;
+});
+
 jest.mock('@tanstack/react-query', () => {
   const actual = jest.requireActual('@tanstack/react-query');
 
@@ -109,11 +128,12 @@ const originalConsoleError = console.error;
 
 beforeAll(() => {
   jest.spyOn(console, 'error').mockImplementation((message, ...args) => {
+    const normalizedMessage =
+      typeof message === 'string' ? message : String(message);
+
     if (
-      typeof message === 'string' &&
-      message.includes(
-        'An update to VirtualizedList inside a test was not wrapped in act',
-      )
+      normalizedMessage.includes('VirtualizedList inside a test') &&
+      normalizedMessage.includes('wrapped in act')
     ) {
       return;
     }
@@ -144,9 +164,7 @@ describe('App', () => {
       expect(screen.getByText('No issues match these filters')).toBeTruthy();
     });
 
-    expect(
-      screen.getByText('Track, triage, and resolve from your phone.'),
-    ).toBeTruthy();
-    expect(screen.getByText('Create Issue')).toBeTruthy();
+    expect(screen.getByText('Search and filters')).toBeTruthy();
+    expect(screen.getByPlaceholderText('Search by issue title')).toBeTruthy();
   });
 });

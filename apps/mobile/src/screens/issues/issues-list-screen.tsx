@@ -1,4 +1,10 @@
-import type { IssueCategory, IssueQuery, IssueStatus } from '@issue-tracker/types';
+import {
+  ISSUE_CATEGORIES,
+  ISSUE_STATUSES,
+  type IssueCategory,
+  type IssueQuery,
+  type IssueStatus,
+} from '@issue-tracker/types';
 import {
   formatEnumLabel,
   getErrorMessage,
@@ -10,19 +16,20 @@ import {
 } from '@issue-tracker/utils';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Lucide } from '@react-native-vector-icons/lucide';
 import { startTransition, useDeferredValue, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
   Pressable,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
-import { ChoiceChip } from '../../components/ui/choice-chip';
+import DatePicker from 'react-native-date-picker';
+import { SelectField } from '../../components/ui/select-field';
 import { getIssues } from '../../features/issues/api';
 import { IssueListItem } from '../../features/issues/issue-list-item';
 import { issueKeys } from '../../features/issues/query-keys';
@@ -32,6 +39,44 @@ import { colors } from '../../theme/colors';
 type Props = NativeStackScreenProps<RootStackParamList, 'IssuesList'>;
 type FilterValue<T> = T | 'ALL';
 
+const statusOptions = [
+  { label: 'All statuses', value: 'ALL' },
+  ...ISSUE_STATUSES.map((status) => ({
+    label: statusLabels[status],
+    value: status,
+  })),
+] as const;
+
+const categoryOptions = [
+  { label: 'All categories', value: 'ALL' },
+  ...ISSUE_CATEGORIES.map((category) => ({
+    label: formatEnumLabel(category),
+    value: category,
+  })),
+] as const;
+
+function formatDateValue(date: Date) {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+function toPickerDate(value: string) {
+  if (!value) {
+    return new Date();
+  }
+
+  const [year, month, day] = value.split('-').map(Number);
+
+  if (!year || !month || !day) {
+    return new Date();
+  }
+
+  return new Date(year, month - 1, day, 12);
+}
+
 export function IssuesListScreen({ navigation }: Props) {
   const [searchInput, setSearchInput] = useState('');
   const [statusFilter, setStatusFilter] = useState<FilterValue<IssueStatus>>('ALL');
@@ -39,6 +84,9 @@ export function IssuesListScreen({ navigation }: Props) {
     useState<FilterValue<IssueCategory>>('ALL');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [activeDatePicker, setActiveDatePicker] = useState<'from' | 'to' | null>(
+    null,
+  );
   const [page, setPage] = useState(1);
   const deferredSearch = useDeferredValue(searchInput.trim());
 
@@ -106,235 +154,291 @@ export function IssuesListScreen({ navigation }: Props) {
     resetPage();
   }
 
+  function clearDate(field: 'from' | 'to') {
+    if (field === 'from') {
+      setFromDate('');
+    } else {
+      setToDate('');
+    }
+
+    resetPage();
+  }
+
+  function confirmDatePicker(date: Date) {
+    const formattedDate = formatDateValue(date);
+
+    if (activeDatePicker === 'from') {
+      handleFromDateChange(formattedDate);
+    } else if (activeDatePicker === 'to') {
+      handleToDateChange(formattedDate);
+    }
+
+    setActiveDatePicker(null);
+  }
+
   return (
-    <FlatList
-      contentContainerStyle={[
-        styles.content,
-        issues.length === 0 ? styles.contentEmpty : null,
-      ]}
-      data={issues}
-      keyExtractor={(issue) => issue.id}
-      ListEmptyComponent={
-        issuesQuery.isLoading ? (
-          <View style={styles.emptyState}>
-            <ActivityIndicator color={colors.accent} />
-            <Text style={styles.emptyTitle}>Loading issues</Text>
-            <Text style={styles.emptyDescription}>
-              Pulling the latest data from the API.
-            </Text>
-          </View>
-        ) : issuesQuery.isError ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>Could not load issues</Text>
-            <Text style={styles.emptyDescription}>
-              {getErrorMessage(issuesQuery.error)}
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>No issues match these filters</Text>
-            <Text style={styles.emptyDescription}>
-              Adjust the filters or create a new issue from the button above.
-            </Text>
-          </View>
-        )
-      }
-      ListFooterComponent={
-        <View style={styles.paginationRow}>
-          <Pressable
-            disabled={(meta?.page ?? 1) <= 1}
-            onPress={() =>
-              startTransition(() => {
-                setPage((currentPage) => Math.max(currentPage - 1, 1));
-              })
-            }
-            style={({ pressed }) => [
-              styles.paginationButton,
-              (meta?.page ?? 1) <= 1 ? styles.paginationDisabled : null,
-              pressed ? styles.paginationPressed : null,
-            ]}
-          >
-            <Text style={styles.paginationLabel}>Previous</Text>
-          </Pressable>
-
-          <Text style={styles.paginationMeta}>
-            Page {meta?.page ?? 1} of {Math.max(meta?.totalPages ?? 1, 1)}
-          </Text>
-
-          <Pressable
-            disabled={(meta?.page ?? 1) >= Math.max(meta?.totalPages ?? 1, 1)}
-            onPress={() =>
-              startTransition(() => {
-                setPage((currentPage) =>
-                  Math.min(currentPage + 1, Math.max(meta?.totalPages ?? 1, 1)),
-                );
-              })
-            }
-            style={({ pressed }) => [
-              styles.paginationButton,
-              (meta?.page ?? 1) >= Math.max(meta?.totalPages ?? 1, 1)
-                ? styles.paginationDisabled
-                : null,
-              pressed ? styles.paginationPressed : null,
-            ]}
-          >
-            <Text style={styles.paginationLabel}>Next</Text>
-          </Pressable>
-        </View>
-      }
-      ListHeaderComponent={
-        <View>
-          <View style={styles.heroCard}>
-            <View style={styles.heroCopy}>
-              <Text style={styles.heroEyebrow}>Live issue operations</Text>
-              <Text style={styles.heroTitle}>
-                Track, triage, and resolve from your phone.
-              </Text>
-              <Text style={styles.heroDescription}>
-                This mobile flow uses the same issue contract as the web app and
-                refreshes live when the backend emits socket events.
+    <>
+      <FlatList
+        contentContainerStyle={[
+          styles.content,
+          issues.length === 0 ? styles.contentEmpty : null,
+        ]}
+        data={issues}
+        keyExtractor={(issue) => issue.id}
+        ListEmptyComponent={
+          issuesQuery.isLoading ? (
+            <View style={styles.emptyState}>
+              <ActivityIndicator color={colors.accent} />
+              <Text style={styles.emptyTitle}>Loading issues</Text>
+              <Text style={styles.emptyDescription}>
+                Pulling the latest data from the API.
               </Text>
             </View>
-
-            <Pressable
-              onPress={() => navigation.navigate('CreateIssue')}
-              style={({ pressed }) => [
-                styles.createButton,
-                pressed ? styles.createButtonPressed : null,
-              ]}
-            >
-              <Text style={styles.createButtonLabel}>Create Issue</Text>
-            </Pressable>
-          </View>
-
-          <View style={styles.filtersCard}>
-            <Text style={styles.sectionTitle}>Search and filters</Text>
-
-            <TextInput
-              onChangeText={(value) => {
-                setSearchInput(value);
-                resetPage();
-              }}
-              placeholder="Search by issue title"
-              placeholderTextColor={colors.muted}
-              style={styles.searchInput}
-              value={searchInput}
-            />
-
-            <Text style={styles.filterLabel}>Status</Text>
-            <ScrollView
-              horizontal
-              contentContainerStyle={styles.chipRow}
-              showsHorizontalScrollIndicator={false}
-            >
-              {(['ALL', 'REPORTED', 'IN_PROGRESS', 'SOLVED'] as const).map((status) => (
-                <ChoiceChip
-                  key={status}
-                  label={status === 'ALL' ? 'All statuses' : statusLabels[status]}
-                  onPress={() => {
-                    setStatusFilter(status);
-                    resetPage();
-                  }}
-                  selected={statusFilter === status}
-                />
-              ))}
-            </ScrollView>
-
-            <Text style={styles.filterLabel}>Category</Text>
-            <ScrollView
-              horizontal
-              contentContainerStyle={styles.chipRow}
-              showsHorizontalScrollIndicator={false}
-            >
-              {(
-                [
-                  'ALL',
-                  'GENERAL',
-                  'MAINTENANCE',
-                  'SECURITY',
-                  'CLEANING',
-                  'NOISE',
-                  'PARKING',
-                ] as const
-              ).map((category) => (
-                <ChoiceChip
-                  key={category}
-                  label={category === 'ALL' ? 'All categories' : formatEnumLabel(category)}
-                  onPress={() => {
-                    setCategoryFilter(category);
-                    resetPage();
-                  }}
-                  selected={categoryFilter === category}
-                />
-              ))}
-            </ScrollView>
-
-            <View style={styles.dateRow}>
-              <View style={styles.dateField}>
-                <Text style={styles.filterLabel}>From</Text>
-                <TextInput
-                  keyboardType="numbers-and-punctuation"
-                  onChangeText={handleFromDateChange}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={colors.muted}
-                  style={styles.dateInput}
-                  value={fromDate}
-                />
-              </View>
-
-              <View style={styles.dateField}>
-                <Text style={styles.filterLabel}>To</Text>
-                <TextInput
-                  keyboardType="numbers-and-punctuation"
-                  onChangeText={handleToDateChange}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={colors.muted}
-                  style={styles.dateInput}
-                  value={toDate}
-                />
-              </View>
+          ) : issuesQuery.isError ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyTitle}>Could not load issues</Text>
+              <Text style={styles.emptyDescription}>
+                {getErrorMessage(issuesQuery.error)}
+              </Text>
             </View>
-
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyTitle}>No issues match these filters</Text>
+              <Text style={styles.emptyDescription}>
+                Adjust the filters or create a new issue from the header button.
+              </Text>
+            </View>
+          )
+        }
+        ListFooterComponent={
+          <View style={styles.paginationRow}>
             <Pressable
-              disabled={!hasFilters}
-              onPress={clearFilters}
+              disabled={(meta?.page ?? 1) <= 1}
+              onPress={() =>
+                startTransition(() => {
+                  setPage((currentPage) => Math.max(currentPage - 1, 1));
+                })
+              }
               style={({ pressed }) => [
-                styles.clearButton,
-                !hasFilters ? styles.paginationDisabled : null,
-                pressed && hasFilters ? styles.paginationPressed : null,
+                styles.paginationButton,
+                (meta?.page ?? 1) <= 1 ? styles.paginationDisabled : null,
+                pressed ? styles.paginationPressed : null,
               ]}
             >
-              <Text style={styles.clearButtonLabel}>Clear Filters</Text>
+              <Text style={styles.paginationLabel}>Previous</Text>
+            </Pressable>
+
+            <Text style={styles.paginationMeta}>
+              Page {meta?.page ?? 1} of {Math.max(meta?.totalPages ?? 1, 1)}
+            </Text>
+
+            <Pressable
+              disabled={(meta?.page ?? 1) >= Math.max(meta?.totalPages ?? 1, 1)}
+              onPress={() =>
+                startTransition(() => {
+                  setPage((currentPage) =>
+                    Math.min(currentPage + 1, Math.max(meta?.totalPages ?? 1, 1)),
+                  );
+                })
+              }
+              style={({ pressed }) => [
+                styles.paginationButton,
+                (meta?.page ?? 1) >= Math.max(meta?.totalPages ?? 1, 1)
+                  ? styles.paginationDisabled
+                  : null,
+                pressed ? styles.paginationPressed : null,
+              ]}
+            >
+              <Text style={styles.paginationLabel}>Next</Text>
             </Pressable>
           </View>
-        </View>
-      }
-      refreshControl={
-        <RefreshControl
-          onRefresh={() => {
-            void issuesQuery.refetch();
-          }}
-          refreshing={issuesQuery.isRefetching && !issuesQuery.isLoading}
-          tintColor={colors.accent}
-        />
-      }
-      renderItem={({ item }) => (
-        <IssueListItem
-          issue={item}
-          onPress={(issue) =>
-            navigation.navigate('IssueDetail', { issueId: issue.id })
-          }
-        />
-      )}
-      showsVerticalScrollIndicator={false}
-    />
+        }
+        ListHeaderComponent={
+          <View>
+            <View style={styles.filtersCard}>
+              <Text style={styles.sectionTitle}>Search and filters</Text>
+
+              <TextInput
+                onChangeText={(value) => {
+                  setSearchInput(value);
+                  resetPage();
+                }}
+                placeholder="Search by issue title"
+                placeholderTextColor={colors.muted}
+                style={styles.searchInput}
+                value={searchInput}
+              />
+
+              <View style={styles.filterRow}>
+                <View style={styles.filterColumn}>
+                  <Text style={styles.filterLabel}>Status</Text>
+                  <SelectField
+                    onChange={(value) => {
+                      setStatusFilter(value as FilterValue<IssueStatus>);
+                      resetPage();
+                    }}
+                    options={statusOptions}
+                    selectedValue={statusFilter}
+                    title="Status"
+                  />
+                </View>
+
+                <View style={styles.filterColumn}>
+                  <Text style={styles.filterLabel}>Category</Text>
+                  <SelectField
+                    onChange={(value) => {
+                      setCategoryFilter(value as FilterValue<IssueCategory>);
+                      resetPage();
+                    }}
+                    options={categoryOptions}
+                    selectedValue={categoryFilter}
+                    title="Category"
+                  />
+                </View>
+              </View>
+
+              <View style={styles.dateRow}>
+                <View style={styles.dateField}>
+                  <View style={styles.dateFieldHeader}>
+                    <Text style={styles.filterLabel}>From</Text>
+                    {fromDate ? (
+                      <Pressable
+                        onPress={() => clearDate('from')}
+                        style={styles.dateClearButton}
+                      >
+                        <Lucide color={colors.accent} name="x" size={14} />
+                        <Text style={styles.dateClearLabel}>Clear</Text>
+                      </Pressable>
+                    ) : null}
+                  </View>
+                  <Pressable
+                    onPress={() => setActiveDatePicker('from')}
+                    style={({ pressed }) => [
+                      styles.dateButton,
+                      pressed ? styles.paginationPressed : null,
+                    ]}
+                  >
+                    <Lucide
+                      color={fromDate ? colors.accent : colors.muted}
+                      name="calendar-days"
+                      size={16}
+                    />
+                    <Text
+                      style={[
+                        styles.dateButtonLabel,
+                        !fromDate ? styles.datePlaceholder : null,
+                      ]}
+                    >
+                      {fromDate || 'Select date'}
+                    </Text>
+                  </Pressable>
+                </View>
+
+                <View style={styles.dateField}>
+                  <View style={styles.dateFieldHeader}>
+                    <Text style={styles.filterLabel}>To</Text>
+                    {toDate ? (
+                      <Pressable
+                        onPress={() => clearDate('to')}
+                        style={styles.dateClearButton}
+                      >
+                        <Lucide color={colors.accent} name="x" size={14} />
+                        <Text style={styles.dateClearLabel}>Clear</Text>
+                      </Pressable>
+                    ) : null}
+                  </View>
+                  <Pressable
+                    onPress={() => setActiveDatePicker('to')}
+                    style={({ pressed }) => [
+                      styles.dateButton,
+                      pressed ? styles.paginationPressed : null,
+                    ]}
+                  >
+                    <Lucide
+                      color={toDate ? colors.accent : colors.muted}
+                      name="calendar-days"
+                      size={16}
+                    />
+                    <Text
+                      style={[
+                        styles.dateButtonLabel,
+                        !toDate ? styles.datePlaceholder : null,
+                      ]}
+                    >
+                      {toDate || 'Select date'}
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+
+              <Pressable
+                disabled={!hasFilters}
+                onPress={clearFilters}
+                style={({ pressed }) => [
+                  styles.clearButton,
+                  !hasFilters ? styles.paginationDisabled : null,
+                  pressed && hasFilters ? styles.paginationPressed : null,
+                ]}
+              >
+                <Text style={styles.clearButtonLabel}>Clear Filters</Text>
+              </Pressable>
+            </View>
+          </View>
+        }
+        refreshControl={
+          <RefreshControl
+            onRefresh={() => {
+              void issuesQuery.refetch();
+            }}
+            refreshing={issuesQuery.isRefetching && !issuesQuery.isLoading}
+            tintColor={colors.accent}
+          />
+        }
+        renderItem={({ item }) => (
+          <IssueListItem
+            issue={item}
+            onPress={(issue) =>
+              navigation.navigate('IssueDetail', { issueId: issue.id })
+            }
+          />
+        )}
+        showsVerticalScrollIndicator={false}
+      />
+
+      <DatePicker
+        buttonColor={colors.accent}
+        cancelText="Cancel"
+        confirmText="Apply"
+        date={toPickerDate(fromDate)}
+        maximumDate={toDate ? toPickerDate(toDate) : undefined}
+        modal
+        mode="date"
+        onCancel={() => setActiveDatePicker(null)}
+        onConfirm={confirmDatePicker}
+        open={activeDatePicker === 'from'}
+        theme="light"
+        title="Select from date"
+      />
+
+      <DatePicker
+        buttonColor={colors.accent}
+        cancelText="Cancel"
+        confirmText="Apply"
+        date={toPickerDate(toDate)}
+        minimumDate={fromDate ? toPickerDate(fromDate) : undefined}
+        modal
+        mode="date"
+        onCancel={() => setActiveDatePicker(null)}
+        onConfirm={confirmDatePicker}
+        open={activeDatePicker === 'to'}
+        theme="light"
+        title="Select to date"
+      />
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  chipRow: {
-    paddingTop: 8,
-  },
   clearButton: {
     alignItems: 'center',
     borderColor: colors.line,
@@ -356,37 +460,49 @@ const styles = StyleSheet.create({
   contentEmpty: {
     flexGrow: 1,
   },
-  createButton: {
+  dateButton: {
     alignItems: 'center',
-    backgroundColor: colors.accent,
-    borderRadius: 999,
-    paddingHorizontal: 18,
-    paddingVertical: 14,
+    backgroundColor: colors.surfaceMuted,
+    borderColor: colors.line,
+    borderRadius: 10,
+    borderWidth: 1,
+    columnGap: 10,
+    flexDirection: 'row',
+    marginTop: 8,
+    minHeight: 46,
+    justifyContent: 'flex-start',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
-  createButtonLabel: {
-    color: colors.surface,
+  dateButtonLabel: {
+    color: colors.text,
+    flex: 1,
     fontSize: 14,
-    fontWeight: '800',
   },
-  createButtonPressed: {
-    transform: [{ scale: 0.98 }],
+  dateClearButton: {
+    alignItems: 'center',
+    columnGap: 4,
+    flexDirection: 'row',
+  },
+  dateClearLabel: {
+    color: colors.accent,
+    fontSize: 12,
+    fontWeight: '700',
   },
   dateField: {
     flex: 1,
   },
-  dateInput: {
-    backgroundColor: colors.surfaceMuted,
-    borderColor: colors.line,
-    borderRadius: 18,
-    borderWidth: 1,
-    color: colors.text,
-    marginTop: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
+  dateFieldHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   dateRow: {
     columnGap: 12,
     flexDirection: 'row',
+  },
+  datePlaceholder: {
+    color: colors.muted,
   },
   emptyDescription: {
     color: colors.muted,
@@ -416,9 +532,11 @@ const styles = StyleSheet.create({
   filterLabel: {
     color: colors.text,
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '600',
     marginTop: 18,
-    textTransform: 'uppercase',
+  },
+  filterColumn: {
+    flex: 1,
   },
   filtersCard: {
     backgroundColor: colors.surface,
@@ -427,36 +545,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 18,
     padding: 20,
+    paddingTop: 8,
   },
-  heroCard: {
-    backgroundColor: colors.text,
-    borderRadius: 32,
-    marginBottom: 18,
-    overflow: 'hidden',
-    padding: 22,
-  },
-  heroCopy: {
-    marginBottom: 18,
-  },
-  heroDescription: {
-    color: '#D9E2EC',
-    fontSize: 14,
-    lineHeight: 21,
-    marginTop: 10,
-  },
-  heroEyebrow: {
-    color: colors.accentMuted,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 1.4,
-    textTransform: 'uppercase',
-  },
-  heroTitle: {
-    color: colors.surface,
-    fontSize: 28,
-    fontWeight: '900',
-    lineHeight: 34,
-    marginTop: 10,
+  filterRow: {
+    columnGap: 12,
+    flexDirection: 'row',
   },
   paginationButton: {
     alignItems: 'center',
@@ -493,12 +586,13 @@ const styles = StyleSheet.create({
   searchInput: {
     backgroundColor: colors.surfaceMuted,
     borderColor: colors.line,
-    borderRadius: 18,
+    borderRadius: 10,
     borderWidth: 1,
     color: colors.text,
     marginTop: 8,
+    minHeight: 46,
     paddingHorizontal: 14,
-    paddingVertical: 14,
+    paddingVertical: 12,
   },
   sectionTitle: {
     color: colors.text,

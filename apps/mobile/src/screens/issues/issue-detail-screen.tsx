@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
   },
   ghostDangerButton: {
     alignItems: 'center',
-    borderColor: colors.accent,
+    borderColor: colors.warning,
     borderRadius: 999,
     borderWidth: 1,
     flex: 1,
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   ghostDangerLabel: {
-    color: colors.accent,
+    color: colors.warning,
     fontSize: 14,
     fontWeight: '800',
   },

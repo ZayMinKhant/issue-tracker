@@ -109,13 +109,6 @@ export function CreateIssueScreen({ navigation }: Props) {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>Create a new issue</Text>
-        <Text style={styles.description}>
-          Submit a field report from mobile. The backend stores the filename only,
-          and the realtime channel will push the new issue back to other connected
-          clients.
-        </Text>
-
         <IssueFormFields
           attachmentName={attachmentName}
           control={control}
@@ -149,13 +142,6 @@ const styles = StyleSheet.create({
     padding: 18,
     paddingBottom: 36,
   },
-  description: {
-    color: colors.muted,
-    fontSize: 15,
-    lineHeight: 22,
-    marginBottom: 18,
-    marginTop: 8,
-  },
   submitButton: {
     alignItems: 'center',
     backgroundColor: colors.accent,
@@ -174,10 +160,5 @@ const styles = StyleSheet.create({
   },
   submitPressed: {
     transform: [{ scale: 0.98 }],
-  },
-  title: {
-    color: colors.text,
-    fontSize: 28,
-    fontWeight: '900',
   },
 });
