@@ -11,8 +11,10 @@
     "incremental": true,
     "skipLibCheck": true,
     "strict": true,
-    "baseUrl": "./",
-    "outDir": "./build"
+    "outDir": "./build",
+    "paths": {
+        "app/*": ["./src/*"]
+    }
   },
   "include": ["src", "prisma"]
 }

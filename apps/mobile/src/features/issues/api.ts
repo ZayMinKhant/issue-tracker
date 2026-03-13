@@ -1,4 +1,3 @@
-import { api } from '@/lib/api';
 import type {
   CreateIssueInput,
   Issue,
@@ -6,36 +5,38 @@ import type {
   IssueQuery,
   UpdateIssueInput,
 } from '@issue-tracker/types';
+import axios from 'axios';
+import { getApiBaseUrl } from '../../config/environment';
 
-export {
-  ISSUE_CATEGORIES,
-  ISSUE_STATUSES,
-  type CreateIssueInput,
-  type Issue,
-  type IssueCategory,
-  type IssueListResponse,
-  type IssueQuery,
-  type IssueStatus,
-  type UpdateIssueInput,
-} from '@issue-tracker/types';
+export const api = axios.create({
+  baseURL: getApiBaseUrl(),
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+function compactParams(query: IssueQuery) {
+  return Object.fromEntries(
+    Object.entries(query).filter(([, value]) => value !== undefined && value !== ''),
+  );
+}
 
 export async function getIssues(query: IssueQuery) {
   const response = await api.get<IssueListResponse>('/issues', {
-    params: Object.fromEntries(
-      Object.entries(query).filter(([, value]) => value !== undefined && value !== ''),
-    ),
+    params: compactParams(query),
   });
 
   return response.data;
 }
 
-export async function createIssue(payload: CreateIssueInput) {
-  const response = await api.post<Issue>('/issues', payload);
+export async function getIssue(id: string) {
+  const response = await api.get<Issue>(`/issues/${id}`);
   return response.data;
 }
 
-export async function getIssue(id: string) {
-  const response = await api.get<Issue>(`/issues/${id}`);
+export async function createIssue(payload: CreateIssueInput) {
+  const response = await api.post<Issue>('/issues', payload);
   return response.data;
 }
 
