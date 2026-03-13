@@ -4,13 +4,14 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Issue {
   id             String        @id @default(uuid())
   title          String
   description    String
-  submitterName  String
+  submitterName  String?
   category       IssueCategory
   status         IssueStatus   @default(REPORTED)
   attachmentName String?

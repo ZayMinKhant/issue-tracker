@@ -1,0 +1,2 @@
+ALTER TABLE "Issue"
+ALTER COLUMN "submitterName" DROP NOT NULL;
