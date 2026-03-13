@@ -1,0 +1,34 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Issue {
+  id             String        @id @default(uuid())
+  title          String
+  description    String
+  submitterName  String
+  category       IssueCategory
+  status         IssueStatus   @default(REPORTED)
+  attachmentName String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+enum IssueStatus {
+  REPORTED
+  IN_PROGRESS
+  SOLVED
+}
+
+enum IssueCategory {
+  GENERAL
+  MAINTENANCE
+  SECURITY
+  CLEANING
+  NOISE
+  PARKING
+}
