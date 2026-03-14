@@ -105,10 +105,7 @@ Create `apps/api/.env`:
 ```env
 DATABASE_URL=postgresql://USER:PASSWORD@localhost:5432/issue_tracker
 PORT=3001
-ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 ```
-
-`ALLOWED_ORIGINS` is optional in local development and required in production.
 
 Apply the Prisma migration:
 
