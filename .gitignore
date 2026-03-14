@@ -30,6 +30,8 @@ Thumbs.db
 coverage/
 logs/
 *.log
+.turbo/
+tmp/
 
 # TypeScript
 *.tsbuildinfo
