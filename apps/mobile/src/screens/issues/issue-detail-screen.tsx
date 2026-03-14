@@ -1,9 +1,3 @@
-import {
-  errorCodes,
-  isErrorWithCode,
-  pick,
-  types,
-} from '@react-native-documents/picker';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { Issue } from '@issue-tracker/types';
 import {
@@ -29,10 +23,10 @@ import {
   Text,
   View,
 } from 'react-native';
-import { deleteIssue, getIssue, updateIssue } from '../../features/issues/api';
-import { getPickedAttachmentName } from '../../features/issues/attachments';
-import { IssueFormFields } from '../../features/issues/issue-form-fields';
-import { issueKeys } from '../../features/issues/query-keys';
+import { deleteIssue, getIssue, updateIssue } from '../../features/issues/api/api';
+import { IssueFormFields } from '../../features/issues/components/issue-form-fields';
+import { pickAttachment } from '../../features/issues/utils/pick-attachment';
+import { issueKeys } from '../../features/issues/api/query-keys';
 import type { RootStackParamList } from '../../navigation/types';
 import { colors, statusColors } from '../../theme/colors';
 
@@ -111,26 +105,7 @@ export function IssueDetailScreen({ navigation, route }: Props) {
     },
   });
 
-  async function handlePickAttachment() {
-    try {
-      const files = await pick({
-        allowMultiSelection: false,
-        mode: 'import',
-        type: [types.allFiles],
-      });
 
-      setValue('attachmentName', getPickedAttachmentName(files), {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-    } catch (error) {
-      if (isErrorWithCode(error) && error.code === errorCodes.OPERATION_CANCELED) {
-        return;
-      }
-
-      Alert.alert('Could not select file', getErrorMessage(error));
-    }
-  }
 
   const onSubmit = handleSubmit((values) => {
     updateMutation.mutate(values);
@@ -261,7 +236,7 @@ export function IssueDetailScreen({ navigation, route }: Props) {
           control={control}
           disabled={!isEditing}
           errors={errors}
-          onPickAttachment={handlePickAttachment}
+          onPickAttachment={() => pickAttachment(setValue)}
           showStatus
         />
 

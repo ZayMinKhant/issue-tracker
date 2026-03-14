@@ -1,10 +1,8 @@
-'use client';
-
 import { X } from 'lucide-react';
 import type { BaseSyntheticEvent, ChangeEvent } from 'react';
 import type { FieldErrors, UseFormRegister } from 'react-hook-form';
-import { ISSUE_CATEGORIES } from '@/lib/issues';
-import { type CreateIssueFormValues, formatEnumLabel } from '@/app/utils/issues-utils';
+import { ISSUE_CATEGORIES } from '@issue-tracker/types';
+import { formatEnumLabel, type CreateIssueFormValues } from '@issue-tracker/utils';
 
 interface CreateIssueModalProps {
   attachmentName: string | undefined;

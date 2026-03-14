@@ -14,8 +14,8 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { SelectField } from '../../components/ui/select-field';
-import { colors } from '../../theme/colors';
+import { SelectField } from '../../../components/ui/select-field';
+import { colors } from '../../../theme/colors';
 
 type IssueFormShape = {
   title: string;

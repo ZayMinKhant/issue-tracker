@@ -1,7 +1,7 @@
 import { startTransition } from 'react';
 import { Search } from 'lucide-react';
-import { ISSUE_CATEGORIES, ISSUE_STATUSES, type IssueCategory, type IssueStatus } from '@/lib/issues';
-import { formatEnumLabel, statusLabels } from '@/app/utils/issues-utils';
+import { ISSUE_CATEGORIES, ISSUE_STATUSES, type IssueCategory, type IssueStatus } from '@issue-tracker/types';
+import { formatEnumLabel, statusLabels } from '@issue-tracker/utils';
 
 interface IssuesFiltersProps {
   categoryFilter: IssueCategory | 'ALL';

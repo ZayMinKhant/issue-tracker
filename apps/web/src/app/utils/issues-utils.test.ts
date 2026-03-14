@@ -5,7 +5,7 @@ import {
   normalizeOptionalTextInput,
   syncIssueDateRange,
   toUpdateIssueFormValues,
-} from '@/app/utils/issues-utils';
+} from '@issue-tracker/utils';
 
 describe('createIssueSchema', () => {
   it('allows a blank submitter name', () => {

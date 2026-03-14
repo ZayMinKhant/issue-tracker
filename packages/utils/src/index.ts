@@ -3,8 +3,12 @@ import { z } from 'zod';
 import {
   ISSUE_CATEGORIES,
   ISSUE_STATUSES,
+  type CreateIssueInput,
   type Issue,
+  type IssueListResponse,
+  type IssueQuery,
   type IssueStatus,
+  type UpdateIssueInput,
 } from '@issue-tracker/types';
 
 export const createIssueSchema = z.object({
@@ -109,3 +113,39 @@ export function toUpdateIssueFormValues(issue: Issue): UpdateIssueFormValues {
     attachmentName: issue.attachmentName ?? '',
   };
 }
+
+export function compactParams(query: Record<string, unknown>) {
+  return Object.fromEntries(
+    Object.entries(query).filter(([, value]) => value !== undefined && value !== ''),
+  );
+}
+
+export type { AxiosInstance } from 'axios';
+
+export function createIssueApi(api: { get: Function; post: Function; patch: Function; delete: Function }) {
+  return {
+    getIssues: async (query: IssueQuery) => {
+      const response = await (api.get as Function)('/issues', {
+        params: compactParams(query as unknown as Record<string, unknown>),
+      });
+      return (response as { data: IssueListResponse }).data;
+    },
+    getIssue: async (id: string) => {
+      const response = await (api.get as Function)(`/issues/${id}`);
+      return (response as { data: Issue }).data;
+    },
+    createIssue: async (payload: CreateIssueInput) => {
+      const response = await (api.post as Function)('/issues', payload);
+      return (response as { data: Issue }).data;
+    },
+    updateIssue: async (id: string, payload: UpdateIssueInput) => {
+      const response = await (api.patch as Function)(`/issues/${id}`, payload);
+      return (response as { data: Issue }).data;
+    },
+    deleteIssue: async (id: string) => {
+      const response = await (api.delete as Function)(`/issues/${id}`);
+      return (response as { data: { id: string; deleted: true } }).data;
+    },
+  };
+}
+

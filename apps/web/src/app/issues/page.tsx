@@ -1,46 +1,32 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { startTransition, useDeferredValue, useEffect, useState, type ChangeEvent } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
-import { toast } from 'sonner';
-import { Breadcrumb } from '@/app/common/breadcrumb';
-import { ConfirmDialog } from '@/app/common/confirm-dialog';
-import {
-  createIssue,
-  deleteIssue,
-  getIssues,
-  type CreateIssueInput,
-  type Issue,
-  type IssueCategory,
-  type IssueStatus,
-} from '@/lib/issues';
-import { CreateIssueModal } from '@/app/components/issues/list/create-issue-modal';
-import { IssuesFilters } from '@/app/components/issues/list/issues-filters';
-import { IssuesTable } from '@/app/components/issues/list/issues-table';
+import type { Issue } from '@issue-tracker/types';
 import {
   createIssueSchema,
   type CreateIssueFormValues,
-  getErrorMessage,
-  getValidIssuePage,
   normalizeOptionalTextInput,
-  normalizeFromDate,
-  normalizeToDate,
-  syncIssueDateRange,
-} from '@/app/utils/issues-utils';
+  getErrorMessage,
+} from '@issue-tracker/utils';
+import { startTransition, useState, type ChangeEvent } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import { Breadcrumb } from '@/app/common/breadcrumb';
+import { ConfirmDialog } from '@/app/common/confirm-dialog';
+import { CreateIssueModal } from '@/app/components/issues/list/create-issue-modal';
+import { IssuesFilters } from '@/app/components/issues/list/issues-filters';
+import { IssuesTable } from '@/app/components/issues/list/issues-table';
+import { useIssueListFilters } from '@/app/hooks/use-issue-list-filters';
+import {
+  CREATE_ISSUE_DEFAULTS,
+  useCreateIssueMutation,
+} from '@/app/hooks/use-create-issue-mutation';
+import { useDeleteIssueMutation } from '@/app/hooks/use-delete-issue-mutation';
+import { handleFileSelection } from '@/app/utils/file-selection';
 
 export default function IssuesPage() {
-  const queryClient = useQueryClient();
-  const [searchInput, setSearchInput] = useState('');
-  const [statusFilter, setStatusFilter] = useState<IssueStatus | 'ALL'>('ALL');
-  const [categoryFilter, setCategoryFilter] = useState<IssueCategory | 'ALL'>('ALL');
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
-  const [page, setPage] = useState(1);
+  const filters = useIssueListFilters();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [issueToDelete, setIssueToDelete] = useState<Issue | null>(null);
-  const deferredSearch = useDeferredValue(searchInput.trim());
 
   const {
     register,
@@ -51,79 +37,24 @@ export default function IssuesPage() {
     formState: { errors },
   } = useForm<CreateIssueFormValues>({
     resolver: zodResolver(createIssueSchema),
-    defaultValues: {
-      title: '',
-      description: '',
-      submitterName: '',
-      category: 'GENERAL',
-      attachmentName: '',
+    defaultValues: CREATE_ISSUE_DEFAULTS,
+  });
+
+  const createMutation = useCreateIssueMutation({
+    onSuccess: () => {
+      reset(CREATE_ISSUE_DEFAULTS);
+      setIsCreateOpen(false);
+      startTransition(() => {
+        filters.setPage(1);
+      });
     },
   });
 
-  const issuesQuery = useQuery({
-    queryKey: ['issues', deferredSearch, statusFilter, categoryFilter, fromDate, toDate, page],
-    queryFn: () =>
-      getIssues({
-        search: deferredSearch || undefined,
-        status: statusFilter === 'ALL' ? undefined : statusFilter,
-        category: categoryFilter === 'ALL' ? undefined : categoryFilter,
-        from: normalizeFromDate(fromDate),
-        to: normalizeToDate(toDate),
-        page,
-        limit: 5,
-      }),
-    placeholderData: keepPreviousData,
-  });
+  const deleteMutation = useDeleteIssueMutation();
 
-  const issues = issuesQuery.data?.items ?? [];
-  const meta = issuesQuery.data?.meta;
-  const totalPages = Math.max(meta?.totalPages ?? 1, 1);
   const attachmentName = useWatch({
     control,
     name: 'attachmentName',
-  });
-
-  useEffect(() => {
-    const nextPage = getValidIssuePage(page, meta?.totalPages);
-
-    if (nextPage !== page) {
-      startTransition(() => {
-        setPage(nextPage);
-      });
-    }
-  }, [meta?.totalPages, page]);
-
-  const createMutation = useMutation({
-    mutationFn: (payload: CreateIssueInput) => createIssue(payload),
-    onSuccess: (issue) => {
-      reset({
-        title: '',
-        description: '',
-        submitterName: '',
-        category: 'GENERAL',
-        attachmentName: '',
-      });
-      toast.success(`Issue "${issue.title}" created.`);
-      setIsCreateOpen(false);
-      startTransition(() => {
-        setPage(1);
-      });
-      void queryClient.invalidateQueries({ queryKey: ['issues'] });
-    },
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteIssue(id),
-    onSuccess: () => {
-      toast.success('Issue deleted.');
-      void queryClient.invalidateQueries({ queryKey: ['issues'] });
-    },
-    onError: (error) => {
-      toast.error(getErrorMessage(error));
-    },
   });
 
   const onSubmit = handleSubmit((values) => {
@@ -136,24 +67,8 @@ export default function IssuesPage() {
     });
   });
 
-  const handleFileSelection = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    setValue('attachmentName', file?.name ?? '', {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
-  };
-
-  const handleFromDateChange = (value: string) => {
-    const nextRange = syncIssueDateRange({ fromDate, toDate }, 'from', value);
-    setFromDate(nextRange.fromDate);
-    setToDate(nextRange.toDate);
-  };
-
-  const handleToDateChange = (value: string) => {
-    const nextRange = syncIssueDateRange({ fromDate, toDate }, 'to', value);
-    setFromDate(nextRange.fromDate);
-    setToDate(nextRange.toDate);
+  const onFileSelection = (event: ChangeEvent<HTMLInputElement>) => {
+    handleFileSelection(event, setValue);
   };
 
   const handleDeleteConfirm = () => {
@@ -170,13 +85,6 @@ export default function IssuesPage() {
       },
     });
   };
-
-  const hasFilters =
-    Boolean(deferredSearch) ||
-    statusFilter !== 'ALL' ||
-    categoryFilter !== 'ALL' ||
-    Boolean(fromDate) ||
-    Boolean(toDate);
 
   return (
     <main className="min-h-screen px-4 py-6 sm:px-6 lg:px-8">
@@ -214,49 +122,42 @@ export default function IssuesPage() {
           </div>
 
           <IssuesFilters
-            categoryFilter={categoryFilter}
-            clearDisabled={!hasFilters}
-            fromDate={fromDate}
-            onCategoryChange={setCategoryFilter}
-            onClear={() => {
-              setSearchInput('');
-              setStatusFilter('ALL');
-              setCategoryFilter('ALL');
-              setFromDate('');
-              setToDate('');
-              setPage(1);
-            }}
-            onFromDateChange={handleFromDateChange}
-            onResetPage={() => setPage(1)}
-            onSearchChange={setSearchInput}
-            onStatusChange={setStatusFilter}
-            onToDateChange={handleToDateChange}
-            searchInput={searchInput}
-            statusFilter={statusFilter}
-            toDate={toDate}
+            categoryFilter={filters.categoryFilter}
+            clearDisabled={!filters.hasFilters}
+            fromDate={filters.fromDate}
+            onCategoryChange={filters.setCategoryFilter}
+            onClear={filters.clearFilters}
+            onFromDateChange={filters.handleFromDateChange}
+            onResetPage={() => filters.setPage(1)}
+            onSearchChange={filters.setSearchInput}
+            onStatusChange={filters.setStatusFilter}
+            onToDateChange={filters.handleToDateChange}
+            searchInput={filters.searchInput}
+            statusFilter={filters.statusFilter}
+            toDate={filters.toDate}
           />
 
           <IssuesTable
-            errorMessage={issuesQuery.isError ? getErrorMessage(issuesQuery.error) : null}
-            isError={issuesQuery.isError}
-            isFetching={issuesQuery.isFetching}
-            isLoading={issuesQuery.isLoading}
-            issues={issues}
+            errorMessage={filters.issuesQuery.isError ? getErrorMessage(filters.issuesQuery.error) : null}
+            isError={filters.issuesQuery.isError}
+            isFetching={filters.issuesQuery.isFetching}
+            isLoading={filters.issuesQuery.isLoading}
+            issues={filters.issues}
             deletingIssueId={deleteMutation.isPending ? issueToDelete?.id ?? null : null}
             onPageNext={() =>
               startTransition(() => {
-                setPage((currentPage) => Math.min(currentPage + 1, totalPages));
+                filters.setPage((currentPage) => Math.min(currentPage + 1, filters.totalPages));
               })
             }
             onPagePrevious={() =>
               startTransition(() => {
-                setPage((currentPage) => Math.max(currentPage - 1, 1));
+                filters.setPage((currentPage) => Math.max(currentPage - 1, 1));
               })
             }
             onDeleteIssue={setIssueToDelete}
-            page={meta?.page ?? 1}
-            total={meta?.total ?? 0}
-            totalPages={totalPages}
+            page={filters.meta?.page ?? 1}
+            total={filters.meta?.total ?? 0}
+            totalPages={filters.totalPages}
           />
         </div>
       </div>
@@ -267,7 +168,7 @@ export default function IssuesPage() {
         isOpen={isCreateOpen}
         isSubmitting={createMutation.isPending}
         onClose={() => setIsCreateOpen(false)}
-        onFileSelection={handleFileSelection}
+        onFileSelection={onFileSelection}
         onSubmit={onSubmit}
         register={register}
       />

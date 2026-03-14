@@ -1,7 +1,7 @@
 import type { Issue } from '@issue-tracker/types';
 import { formatEnumLabel, statusLabels } from '@issue-tracker/utils';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, statusColors } from '../../theme/colors';
+import { colors, statusColors } from '../../../theme/colors';
 
 interface IssueListItemProps {
   issue: Issue;

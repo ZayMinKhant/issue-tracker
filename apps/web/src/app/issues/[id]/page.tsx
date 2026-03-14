@@ -1,6 +1,14 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import type { Issue } from '@issue-tracker/types';
+import {
+  getErrorMessage,
+  normalizeOptionalTextInput,
+  toUpdateIssueFormValues,
+  updateIssueSchema,
+  type UpdateIssueFormValues,
+} from '@issue-tracker/utils';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -12,14 +20,10 @@ import { IssueAttachmentSection } from '@/app/components/issues/detail/issue-att
 import { IssueDetailForm } from '@/app/components/issues/detail/issue-detail-form';
 import { IssueDetailHeader } from '@/app/components/issues/detail/issue-detail-header';
 import { ConfirmDialog } from '@/app/common/confirm-dialog';
+import { useDeleteIssueMutation } from '@/app/hooks/use-delete-issue-mutation';
+import { handleFileSelection } from '@/app/utils/file-selection';
 import { deleteIssue, getIssue, updateIssue } from '@/lib/issues';
-import {
-  getErrorMessage,
-  normalizeOptionalTextInput,
-  toUpdateIssueFormValues,
-  type UpdateIssueFormValues,
-  updateIssueSchema,
-} from '@/app/utils/issues-utils';
+import { issueKeys } from '@/lib/query-keys';
 
 export default function IssueDetailPage() {
   const params = useParams<{ id: string }>();
@@ -49,7 +53,7 @@ export default function IssueDetailPage() {
   });
 
   const issueQuery = useQuery({
-    queryKey: ['issue', issueId],
+    queryKey: issueKeys.detail(issueId),
     queryFn: () => getIssue(issueId),
     enabled: Boolean(issueId),
   });
@@ -75,8 +79,8 @@ export default function IssueDetailPage() {
     onSuccess: (issue) => {
       toast.success(`Issue "${issue.title}" updated.`);
       setIsEditing(false);
-      void queryClient.invalidateQueries({ queryKey: ['issue', issueId] });
-      void queryClient.invalidateQueries({ queryKey: ['issues'] });
+      void queryClient.invalidateQueries({ queryKey: issueKeys.detail(issueId) });
+      void queryClient.invalidateQueries({ queryKey: issueKeys.lists() });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));
@@ -87,7 +91,7 @@ export default function IssueDetailPage() {
     mutationFn: () => deleteIssue(issueId),
     onSuccess: () => {
       toast.success('Issue deleted.');
-      void queryClient.invalidateQueries({ queryKey: ['issues'] });
+      void queryClient.invalidateQueries({ queryKey: issueKeys.lists() });
       router.push('/issues');
     },
     onError: (error) => {
@@ -101,12 +105,8 @@ export default function IssueDetailPage() {
     name: 'attachmentName',
   });
 
-  const handleFileSelection = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    setValue('attachmentName', file?.name ?? '', {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
+  const onFileSelection = (event: ChangeEvent<HTMLInputElement>) => {
+    handleFileSelection(event, setValue);
   };
 
   const handleCancelEdit = () => {
@@ -174,7 +174,7 @@ export default function IssueDetailPage() {
           <IssueAttachmentSection
             attachmentName={attachmentName || issue.attachmentName}
             isEditing={isEditing}
-            onFileSelection={handleFileSelection}
+            onFileSelection={onFileSelection}
           />
         </div>
       </div>

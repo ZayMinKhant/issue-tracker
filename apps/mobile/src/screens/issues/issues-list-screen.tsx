@@ -1,4 +1,5 @@
 import {
+  Issue,
   ISSUE_CATEGORIES,
   ISSUE_STATUSES,
   type IssueCategory,
@@ -30,9 +31,9 @@ import {
 } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import { SelectField } from '../../components/ui/select-field';
-import { getIssues } from '../../features/issues/api';
-import { IssueListItem } from '../../features/issues/issue-list-item';
-import { issueKeys } from '../../features/issues/query-keys';
+import { getIssues } from '../../features/issues/api/api';
+import { IssueListItem } from '../../features/issues/components/issue-list-item';
+import { issueKeys } from '../../features/issues/api/query-keys';
 import type { RootStackParamList } from '../../navigation/types';
 import { colors } from '../../theme/colors';
 
@@ -397,7 +398,7 @@ export function IssuesListScreen({ navigation }: Props) {
         renderItem={({ item }) => (
           <IssueListItem
             issue={item}
-            onPress={(issue) =>
+            onPress={(issue: Issue) =>
               navigation.navigate('IssueDetail', { issueId: issue.id })
             }
           />

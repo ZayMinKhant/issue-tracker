@@ -6,7 +6,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { io } from 'socket.io-client';
-import { getSocketBaseUrl } from '../../config/environment';
+import { getSocketBaseUrl } from '../../../config/environment';
 import {
   handleIssueCreatedEvent,
   handleIssueDeletedEvent,

@@ -1,9 +1,3 @@
-import {
-  errorCodes,
-  isErrorWithCode,
-  pick,
-  types,
-} from '@react-native-documents/picker';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
@@ -23,10 +17,10 @@ import {
   StyleSheet,
   Text,
 } from 'react-native';
-import { createIssue } from '../../features/issues/api';
-import { getPickedAttachmentName } from '../../features/issues/attachments';
-import { IssueFormFields } from '../../features/issues/issue-form-fields';
-import { issueKeys } from '../../features/issues/query-keys';
+import { createIssue } from '../../features/issues/api/api';
+import { IssueFormFields } from '../../features/issues/components/issue-form-fields';
+import { pickAttachment } from '../../features/issues/utils/pick-attachment';
+import { issueKeys } from '../../features/issues/api/query-keys';
 import type { RootStackParamList } from '../../navigation/types';
 import { colors } from '../../theme/colors';
 
@@ -68,27 +62,6 @@ export function CreateIssueScreen({ navigation }: Props) {
     },
   });
 
-  async function handlePickAttachment() {
-    try {
-      const files = await pick({
-        allowMultiSelection: false,
-        mode: 'import',
-        type: [types.allFiles],
-      });
-
-      setValue('attachmentName', getPickedAttachmentName(files), {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-    } catch (error) {
-      if (isErrorWithCode(error) && error.code === errorCodes.OPERATION_CANCELED) {
-        return;
-      }
-
-      Alert.alert('Could not select file', getErrorMessage(error));
-    }
-  }
-
   const onSubmit = handleSubmit((values) => {
     createMutation.mutate({
       attachmentName: values.attachmentName || undefined,
@@ -113,7 +86,7 @@ export function CreateIssueScreen({ navigation }: Props) {
           attachmentName={attachmentName}
           control={control}
           errors={errors}
-          onPickAttachment={handlePickAttachment}
+          onPickAttachment={() => pickAttachment(setValue)}
         />
 
         <Pressable

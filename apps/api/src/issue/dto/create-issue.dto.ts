@@ -1,19 +1,8 @@
 import { Transform } from 'class-transformer';
 import { IssueCategory } from '@prisma/client';
 import { IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { trimNullableString, trimString } from './transformers';
 
-function trimString(value: unknown) {
-  return typeof value === 'string' ? value.trim() : value;
-}
-
-function trimNullableString(value: unknown) {
-  if (typeof value !== 'string') {
-    return value;
-  }
-
-  const trimmed = value.trim();
-  return trimmed ? trimmed : null;
-}
 
 export class CreateIssueDto {
   @Transform(({ value }) => trimString(value))

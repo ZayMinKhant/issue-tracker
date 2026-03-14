@@ -6,13 +6,13 @@ import {
   type FieldErrors,
   type UseFormRegister,
 } from 'react-hook-form';
-import { ISSUE_CATEGORIES, ISSUE_STATUSES, type Issue } from '@/lib/issues';
+import { ISSUE_CATEGORIES, ISSUE_STATUSES, type Issue } from '@issue-tracker/types';
 import {
   formatEnumLabel,
-  statusClasses,
   statusLabels,
   type UpdateIssueFormValues,
-} from '@/app/utils/issues-utils';
+} from '@issue-tracker/utils';
+import { statusClasses } from '@/app/utils/issues-utils';
 
 interface IssueDetailFormProps {
   errors: FieldErrors<UpdateIssueFormValues>;
@@ -138,13 +138,6 @@ export function IssueDetailForm({
               <span className="text-[var(--muted)]">Reported On</span>
               <span className="font-medium text-[var(--foreground)]">
                 {format(new Date(issue.createdAt), 'dd/MM/yyyy HH:mm')}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-[130px_1fr] gap-3 text-sm">
-              <span className="text-[var(--muted)]">Issue Type</span>
-              <span className="font-medium text-[var(--foreground)]">
-                {formatEnumLabel(issue.category)}
               </span>
             </div>
 

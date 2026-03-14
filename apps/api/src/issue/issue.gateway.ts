@@ -1,4 +1,5 @@
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { Issue } from '@prisma/client';
 import { Server } from 'socket.io';
 
 @WebSocketGateway({
@@ -10,11 +11,11 @@ export class IssueGateway {
   @WebSocketServer()
   server!: Server;
 
-  emitCreated(issue: unknown) {
+  emitCreated(issue: Issue) {
     this.server.emit('issue.created', issue);
   }
 
-  emitUpdated(issue: unknown) {
+  emitUpdated(issue: Issue) {
     this.server.emit('issue.updated', issue);
   }
 

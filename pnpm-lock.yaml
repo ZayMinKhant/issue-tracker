@@ -35,9 +35,6 @@ importers:
       class-validator:
         specifier: ^0.14.1
         version: 0.14.4
-      prisma:
-        specifier: ^6.0.0
-        version: 6.19.2(typescript@5.9.3)
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
@@ -60,6 +57,9 @@ importers:
       '@types/node':
         specifier: ^22.0.0
         version: 22.19.15
+      prisma:
+        specifier: ^6.0.0
+        version: 6.19.2(typescript@5.9.3)
       ts-loader:
         specifier: ^9.5.0
         version: 9.5.4(typescript@5.9.3)(webpack@5.104.1)
@@ -267,7 +267,11 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0(@types/node@20.19.37)(vite@8.0.0(@types/node@20.19.37)(jiti@2.6.1)(terser@5.46.0)(yaml@2.8.2))
 
-  packages/config: {}
+  packages/config:
+    devDependencies:
+      vitest:
+        specifier: ^4.1.0
+        version: 4.1.0(@types/node@22.19.15)(vite@8.0.0(@types/node@22.19.15)(jiti@2.6.1)(terser@5.46.0)(yaml@2.8.2))
 
   packages/types: {}
 

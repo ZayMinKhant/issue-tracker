@@ -1,9 +1,10 @@
 import { Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
+import type { Issue } from '@issue-tracker/types';
+import { formatEnumLabel, statusLabels } from '@issue-tracker/utils';
 import { Pagination } from '@/app/common/pagination';
-import { type Issue } from '@/lib/issues';
-import { formatEnumLabel, statusClasses, statusLabels } from '@/app/utils/issues-utils';
+import { statusClasses } from '@/app/utils/issues-utils';
 
 interface IssuesTableProps {
   issues: Issue[];
