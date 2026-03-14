@@ -113,6 +113,15 @@ Apply the Prisma migration:
 pnpm --dir apps/api exec prisma migrate dev
 ```
 
+Common Prisma commands:
+
+```bash
+pnpm --dir apps/api exec prisma generate
+pnpm --dir apps/api exec prisma migrate dev
+pnpm --dir apps/api exec prisma migrate deploy
+pnpm --dir apps/api exec prisma studio
+```
+
 ### Web
 
 The web app defaults to `http://localhost:3001` for the API, but you can override it with `apps/web/.env.local`:
@@ -239,6 +248,10 @@ pnpm --dir apps/api dev
 pnpm --dir apps/api start:dev
 pnpm --dir apps/api build
 pnpm --dir apps/api test
+pnpm --dir apps/api exec prisma generate
+pnpm --dir apps/api exec prisma migrate dev
+pnpm --dir apps/api exec prisma migrate deploy
+pnpm --dir apps/api exec prisma studio
 ```
 
 ### Web
