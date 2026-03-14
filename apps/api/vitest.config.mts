@@ -1,9 +1,11 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig, mergeConfig } from 'vitest/config';
+import sharedConfig from '@issue-tracker/config/vitest';
 
-export default defineConfig({
-  test: {
-    environment: 'node',
-    include: ['src/**/*.test.ts'],
-    setupFiles: ['reflect-metadata'],
-  },
-});
+export default mergeConfig(
+  sharedConfig,
+  defineConfig({
+    test: {
+      setupFiles: ['reflect-metadata'],
+    },
+  })
+);

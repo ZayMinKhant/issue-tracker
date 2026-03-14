@@ -5,8 +5,14 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./vitest": "./vitest.shared.ts"
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./vitest": {
+      "types": "./vitest.shared.mts",
+      "default": "./vitest.shared.mts"
+    }
   },
   "devDependencies": {
     "vitest": "^4.1.0"

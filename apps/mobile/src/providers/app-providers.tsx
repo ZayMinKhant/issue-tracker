@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppNavigator } from '../navigation/app-navigator';
 import { colors } from '../theme/colors';
-import { IssuesRealtimeBridge } from '../features/issues/realtime';
+import { IssuesRealtimeBridge } from '../features/issues/api/realtime';
 
 const navigationTheme = {
   ...DefaultTheme,
@@ -18,7 +18,11 @@ const navigationTheme = {
   },
 };
 
-export function AppProviders() {
+type AppProvidersProps = {
+  onReady?: () => void;
+};
+
+export function AppProviders({ onReady }: AppProvidersProps) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -34,7 +38,7 @@ export function AppProviders() {
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
-        <NavigationContainer theme={navigationTheme}>
+        <NavigationContainer onReady={onReady} theme={navigationTheme}>
           <IssuesRealtimeBridge />
           <AppNavigator />
         </NavigationContainer>

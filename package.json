@@ -1,0 +1,19 @@
+{
+  "name": "issue-tracker-root",
+  "private": true,
+  "packageManager": "pnpm@10.30.0",
+  "scripts": {
+    "dev:api": "pnpm --dir apps/api dev",
+    "dev:web": "pnpm --dir apps/web dev",
+    "dev:mobile": "pnpm --dir apps/mobile dev",
+    "dev": "turbo run dev --filter=api --filter=web --filter=mobile",
+    "android": "pnpm --dir apps/mobile android",
+    "ios": "pnpm --dir apps/mobile ios",
+    "build": "turbo run build --filter=api --filter=web",
+    "test": "turbo run test --filter=api --filter=web --filter=mobile",
+    "lint": "turbo run lint --filter=web --filter=mobile"
+  },
+  "devDependencies": {
+    "turbo": "latest"
+  }
+}

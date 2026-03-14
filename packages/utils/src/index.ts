@@ -27,6 +27,18 @@ export const updateIssueSchema = createIssueSchema.extend({
 
 export type UpdateIssueFormValues = z.infer<typeof updateIssueSchema>;
 
+export const queryIssueSchema = z.object({
+  search: z.string().trim().optional(),
+  status: z.enum(ISSUE_STATUSES).optional(),
+  category: z.enum(ISSUE_CATEGORIES).optional(),
+  from: z.string().datetime().optional(),
+  to: z.string().datetime().optional(),
+  page: z.coerce.number().min(1).optional(),
+  limit: z.coerce.number().min(1).max(100).optional(),
+});
+
+export type QueryIssueValues = z.infer<typeof queryIssueSchema>;
+
 export const statusLabels: Record<IssueStatus, string> = {
   REPORTED: 'Reported',
   IN_PROGRESS: 'In Progress',

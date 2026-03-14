@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react-native';
 import App from '../App';
-import { getIssues } from '../src/features/issues/api';
+import { getIssues } from '../src/features/issues/api/api';
 
 jest.mock('react-native-select-dropdown', () => {
   const React = require('react');
@@ -115,7 +115,7 @@ jest.mock('react-native-safe-area-context', () => ({
   SafeAreaProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
-jest.mock('../src/features/issues/api', () => ({
+jest.mock('../src/features/issues/api/api', () => ({
   createIssue: jest.fn(),
   deleteIssue: jest.fn(),
   getIssue: jest.fn(),
