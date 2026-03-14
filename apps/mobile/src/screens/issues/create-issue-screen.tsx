@@ -56,7 +56,7 @@ export function CreateIssueScreen({ navigation }: Props) {
     },
     onSuccess: (issue) => {
       queryClient.setQueryData(issueKeys.detail(issue.id), issue);
-      void queryClient.invalidateQueries({ queryKey: issueKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: issueKeys.lists() });
       Alert.alert('Issue created', `Saved "${issue.title}".`);
       navigation.goBack();
     },

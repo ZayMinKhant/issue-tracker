@@ -87,7 +87,7 @@ export function IssueDetailScreen({ navigation, route }: Props) {
     },
     onSuccess: (issue) => {
       queryClient.setQueryData(issueKeys.detail(issueId), issue);
-      void queryClient.invalidateQueries({ queryKey: issueKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: issueKeys.lists() });
       setIsEditing(false);
       Alert.alert('Issue updated', `Saved "${issue.title}".`);
     },
@@ -100,12 +100,10 @@ export function IssueDetailScreen({ navigation, route }: Props) {
     },
     onSuccess: () => {
       queryClient.setQueryData(issueKeys.detail(issueId), null);
-      void queryClient.invalidateQueries({ queryKey: issueKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: issueKeys.lists() });
       navigation.goBack();
     },
   });
-
-
 
   const onSubmit = handleSubmit((values) => {
     updateMutation.mutate(values);

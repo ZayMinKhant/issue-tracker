@@ -105,7 +105,10 @@ Create `apps/api/.env`:
 ```env
 DATABASE_URL=postgresql://USER:PASSWORD@localhost:5432/issue_tracker
 PORT=3001
+ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 ```
+
+`ALLOWED_ORIGINS` is optional in local development and required in production.
 
 Apply the Prisma migration:
 
@@ -145,7 +148,7 @@ If none are set, the app falls back automatically:
 
 ## Running The Project
 
-### 1. Start the full local dev stack
+### 1. Start the web + API dev stack
 
 From the repo root:
 
@@ -157,9 +160,16 @@ This starts:
 
 - the NestJS API watcher
 - the Next.js web app
-- the React Native Metro bundler
 
-If you want to launch the native mobile app itself, run one of these in another terminal:
+### 2. Start mobile separately when needed
+
+Start Metro in another terminal:
+
+```bash
+pnpm dev:mobile
+```
+
+Then launch the native app:
 
 ```bash
 pnpm android
@@ -171,7 +181,7 @@ or:
 pnpm ios
 ```
 
-### 2. Start apps individually if needed
+### 3. Start apps individually if needed
 
 You can still run each app separately.
 
@@ -226,6 +236,7 @@ bundle exec pod install
 
 ```bash
 pnpm dev
+pnpm dev:mobile
 pnpm android
 pnpm ios
 pnpm test
@@ -235,7 +246,8 @@ pnpm lint
 
 Scope:
 
-- `pnpm dev` starts API, web, and the mobile Metro bundler
+- `pnpm dev` starts API and web only
+- `pnpm dev:mobile` starts the React Native Metro bundler
 - `pnpm android` and `pnpm ios` launch the native mobile target
 - `pnpm test` runs API, web, and mobile tests
 - `pnpm build` builds API and web

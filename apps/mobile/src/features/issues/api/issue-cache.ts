@@ -4,7 +4,7 @@ import { issueKeys } from './query-keys';
 
 function upsertIssueCache(queryClient: QueryClient, issue: Issue) {
   queryClient.setQueryData(issueKeys.detail(issue.id), issue);
-  void queryClient.invalidateQueries({ queryKey: issueKeys.lists() });
+  queryClient.invalidateQueries({ queryKey: issueKeys.lists() });
 }
 
 export function handleIssueCreatedEvent(queryClient: QueryClient, issue: Issue) {
@@ -20,5 +20,5 @@ export function handleIssueDeletedEvent(
   payload: IssueDeletedPayload,
 ) {
   queryClient.setQueryData(issueKeys.detail(payload.id), null);
-  void queryClient.invalidateQueries({ queryKey: issueKeys.lists() });
+  queryClient.invalidateQueries({ queryKey: issueKeys.lists() });
 }

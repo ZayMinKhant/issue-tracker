@@ -1,4 +1,4 @@
 import { createZodDto } from 'nestjs-zod';
-import { queryIssueSchema } from '@issue-tracker/utils';
+import { queryIssueDtoSchema } from '@issue-tracker/utils';
 
-export class QueryIssueDto extends createZodDto(queryIssueSchema) {}
+export class QueryIssueDto extends createZodDto(queryIssueDtoSchema) {}

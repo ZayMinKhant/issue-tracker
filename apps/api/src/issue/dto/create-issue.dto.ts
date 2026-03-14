@@ -1,4 +1,4 @@
 import { createZodDto } from 'nestjs-zod';
-import { createIssueSchema } from '@issue-tracker/utils';
+import { createIssueDtoSchema } from '@issue-tracker/utils';
 
-export class CreateIssueDto extends createZodDto(createIssueSchema) {}
+export class CreateIssueDto extends createZodDto(createIssueDtoSchema) {}

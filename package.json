@@ -6,7 +6,7 @@
     "dev:api": "pnpm --dir apps/api dev",
     "dev:web": "pnpm --dir apps/web dev",
     "dev:mobile": "pnpm --dir apps/mobile dev",
-    "dev": "turbo run dev --filter=api --filter=web --filter=mobile",
+    "dev": "turbo run dev --filter=api --filter=web",
     "android": "pnpm --dir apps/mobile android",
     "ios": "pnpm --dir apps/mobile ios",
     "build": "turbo run build --filter=api --filter=web",

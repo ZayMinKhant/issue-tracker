@@ -1,5 +1,10 @@
+import { useNavigation } from '@react-navigation/native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import {
+  createNativeStackNavigator,
+  type NativeStackNavigationOptions,
+  type NativeStackNavigationProp,
+} from '@react-navigation/native-stack';
 import LinearGradient from 'react-native-linear-gradient';
 import { CreateIssueScreen } from '../screens/issues/create-issue-screen';
 import { IssueDetailScreen } from '../screens/issues/issue-detail-screen';
@@ -8,6 +13,7 @@ import { colors } from '../theme/colors';
 import type { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+type AppNavigation = NativeStackNavigationProp<RootStackParamList>;
 
 function HeaderGradient() {
   return (
@@ -23,59 +29,74 @@ function HeaderGradient() {
   );
 }
 
+function CreateIssueHeaderButton() {
+  const navigation = useNavigation<AppNavigation>();
+
+  return (
+    <Pressable
+      onPress={() => navigation.navigate('CreateIssue')}
+      style={({ pressed }) => [
+        styles.headerButton,
+        pressed ? styles.headerButtonPressed : null,
+      ]}
+    >
+      <Text style={styles.headerButtonLabel}>Create Issue</Text>
+    </Pressable>
+  );
+}
+
+function HeaderTitleBalance() {
+  return <View style={styles.headerTitleBalance} />;
+}
+
+function CreateIssueHeaderTitle() {
+  return (
+    <View style={styles.headerTitleBlock}>
+      <Text style={styles.headerTitlePrimary}>Create Issue</Text>
+      <Text style={styles.headerTitleSecondary}>Submit a field report</Text>
+    </View>
+  );
+}
+
+const screenOptions: NativeStackNavigationOptions = {
+  contentStyle: {
+    backgroundColor: colors.background,
+  },
+  headerBackground: HeaderGradient,
+  headerShadowVisible: false,
+  headerStyle: {
+    backgroundColor: 'transparent',
+  },
+  headerTintColor: colors.text,
+  headerTitleStyle: {
+    fontWeight: '700',
+  },
+};
+
+const issuesListOptions: NativeStackNavigationOptions = {
+  title: 'Issue Desk',
+  headerRight: CreateIssueHeaderButton,
+};
+
+const createIssueOptions: NativeStackNavigationOptions = {
+  headerRight: HeaderTitleBalance,
+  headerTitleAlign: 'center',
+  headerTitle: CreateIssueHeaderTitle,
+  presentation: 'modal',
+};
+
 export function AppNavigator() {
   return (
-    <Stack.Navigator
-      initialRouteName="IssuesList"
-      screenOptions={{
-        contentStyle: {
-          backgroundColor: colors.background,
-        },
-        headerBackground: () => <HeaderGradient />,
-        headerShadowVisible: false,
-        headerStyle: {
-          backgroundColor: 'transparent',
-        },
-        headerTintColor: colors.text,
-        headerTitleStyle: {
-          fontWeight: '700',
-        },
-      }}
-    >
+    <Stack.Navigator initialRouteName="IssuesList" screenOptions={screenOptions}>
       <Stack.Screen
         component={IssuesListScreen}
         name="IssuesList"
-        options={({ navigation }) => ({
-          title: 'Issue Desk',
-          headerRight: () => (
-            <Pressable
-              onPress={() => navigation.navigate('CreateIssue')}
-              style={({ pressed }) => [
-                styles.headerButton,
-                pressed ? styles.headerButtonPressed : null,
-              ]}
-            >
-              <Text style={styles.headerButtonLabel}>Create Issue</Text>
-            </Pressable>
-          ),
-        })}
+        options={issuesListOptions}
       />
       <Stack.Screen
         component={CreateIssueScreen}
         name="CreateIssue"
-        options={{
-          headerRight: () => <View style={styles.headerTitleBalance} />,
-          headerTitleAlign: 'center',
-          headerTitle: () => (
-            <View style={styles.headerTitleBlock}>
-              <Text style={styles.headerTitlePrimary}>Create Issue</Text>
-              <Text style={styles.headerTitleSecondary}>
-                Submit a field report
-              </Text>
-            </View>
-          ),
-          presentation: 'modal',
-        }}
+        options={createIssueOptions}
       />
       <Stack.Screen
         component={IssueDetailScreen}

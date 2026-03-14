@@ -3,8 +3,6 @@ import App from '../App';
 import { getIssues } from '../src/features/issues/api/api';
 
 jest.mock('react-native-select-dropdown', () => {
-  const React = require('react');
-
   return ({ defaultValue, renderButton }: any) => renderButton(defaultValue, false);
 });
 
@@ -15,7 +13,6 @@ jest.mock('@react-native-vector-icons/lucide', () => ({
 }));
 
 jest.mock('react-native-linear-gradient', () => {
-  const React = require('react');
   const { View } = require('react-native');
 
   return ({ children }: { children?: React.ReactNode }) => <View>{children}</View>;

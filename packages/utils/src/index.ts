@@ -11,26 +11,72 @@ import {
   type UpdateIssueInput,
 } from '@issue-tracker/types';
 
+const issueTitleSchema = z
+  .string()
+  .trim()
+  .min(3, 'Use at least 3 characters.');
+const issueDescriptionSchema = z
+  .string()
+  .trim()
+  .min(10, 'Add enough detail to route the issue.');
+const issueCategorySchema = z.enum(ISSUE_CATEGORIES);
+const issueStatusSchema = z.enum(ISSUE_STATUSES);
+const formOptionalTextSchema = z.string().trim();
+const createOptionalInputTextSchema = z
+  .string()
+  .trim()
+  .optional()
+  .transform((value) => (value ? value : undefined));
+const updateOptionalInputTextSchema = z
+  .string()
+  .trim()
+  .optional()
+  .nullable()
+  .transform((value) => {
+    if (value === undefined) {
+      return undefined;
+    }
+
+    return value ? value : null;
+  });
+
 export const createIssueSchema = z.object({
-  title: z.string().trim().min(3, 'Use at least 3 characters.'),
-  description: z.string().trim().min(10, 'Add enough detail to route the issue.'),
-  submitterName: z.string().trim(),
-  category: z.enum(ISSUE_CATEGORIES),
-  attachmentName: z.string().trim().optional(),
+  title: issueTitleSchema,
+  description: issueDescriptionSchema,
+  submitterName: formOptionalTextSchema,
+  category: issueCategorySchema,
+  attachmentName: formOptionalTextSchema.optional(),
 });
 
 export type CreateIssueFormValues = z.infer<typeof createIssueSchema>;
 
 export const updateIssueSchema = createIssueSchema.extend({
-  status: z.enum(ISSUE_STATUSES),
+  status: issueStatusSchema,
 });
 
 export type UpdateIssueFormValues = z.infer<typeof updateIssueSchema>;
 
+export const createIssueDtoSchema = z.object({
+  title: issueTitleSchema,
+  description: issueDescriptionSchema,
+  submitterName: createOptionalInputTextSchema,
+  category: issueCategorySchema,
+  attachmentName: createOptionalInputTextSchema,
+});
+
+export const updateIssueDtoSchema = z.object({
+  title: issueTitleSchema.optional(),
+  description: issueDescriptionSchema.optional(),
+  submitterName: updateOptionalInputTextSchema,
+  category: issueCategorySchema.optional(),
+  status: issueStatusSchema.optional(),
+  attachmentName: createOptionalInputTextSchema,
+});
+
 export const queryIssueSchema = z.object({
   search: z.string().trim().optional(),
-  status: z.enum(ISSUE_STATUSES).optional(),
-  category: z.enum(ISSUE_CATEGORIES).optional(),
+  status: issueStatusSchema.optional(),
+  category: issueCategorySchema.optional(),
   from: z.string().datetime().optional(),
   to: z.string().datetime().optional(),
   page: z.coerce.number().min(1).optional(),
@@ -38,6 +84,8 @@ export const queryIssueSchema = z.object({
 });
 
 export type QueryIssueValues = z.infer<typeof queryIssueSchema>;
+
+export const queryIssueDtoSchema = queryIssueSchema;
 
 export const statusLabels: Record<IssueStatus, string> = {
   REPORTED: 'Reported',
@@ -160,4 +208,3 @@ export function createIssueApi(api: { get: Function; post: Function; patch: Func
     },
   };
 }
-

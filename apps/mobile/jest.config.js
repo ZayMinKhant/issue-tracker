@@ -1,7 +1,5 @@
-const reactNativePreset = require('react-native/jest-preset');
-
 module.exports = {
-  ...reactNativePreset,
+  preset: 'react-native',
   moduleNameMapper: {
     '^@issue-tracker/types$': '<rootDir>/../../packages/types/src/index.ts',
     '^@issue-tracker/utils$': '<rootDir>/../../packages/utils/src/index.ts',

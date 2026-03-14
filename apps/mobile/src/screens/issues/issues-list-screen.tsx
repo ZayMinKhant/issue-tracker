@@ -389,7 +389,7 @@ export function IssuesListScreen({ navigation }: Props) {
         refreshControl={
           <RefreshControl
             onRefresh={() => {
-              void issuesQuery.refetch();
+              issuesQuery.refetch();
             }}
             refreshing={issuesQuery.isRefetching && !issuesQuery.isLoading}
             tintColor={colors.accent}

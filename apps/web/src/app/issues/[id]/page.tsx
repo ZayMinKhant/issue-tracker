@@ -1,7 +1,6 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { Issue } from '@issue-tracker/types';
 import {
   getErrorMessage,
   normalizeOptionalTextInput,
@@ -20,7 +19,6 @@ import { IssueAttachmentSection } from '@/app/components/issues/detail/issue-att
 import { IssueDetailForm } from '@/app/components/issues/detail/issue-detail-form';
 import { IssueDetailHeader } from '@/app/components/issues/detail/issue-detail-header';
 import { ConfirmDialog } from '@/app/common/confirm-dialog';
-import { useDeleteIssueMutation } from '@/app/hooks/use-delete-issue-mutation';
 import { handleFileSelection } from '@/app/utils/file-selection';
 import { deleteIssue, getIssue, updateIssue } from '@/lib/issues';
 import { issueKeys } from '@/lib/query-keys';

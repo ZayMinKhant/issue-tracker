@@ -6,7 +6,7 @@
     "dev": "nest start --watch",
     "start:dev": "nest start --watch",
     "build": "nest build",
-    "start": "node dist/main",
+    "start": "node build/main",
     "test": "vitest run",
     "test:watch": "vitest"
   },

@@ -1,10 +1,11 @@
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Issue } from '@prisma/client';
 import { Server } from 'socket.io';
+import { getAllowedOrigins } from '../config/cors';
 
 @WebSocketGateway({
   cors: {
-    origin: '*',
+    origin: getAllowedOrigins(),
   },
 })
 export class IssueGateway {
