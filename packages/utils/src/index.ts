@@ -119,12 +119,52 @@ export function getErrorMessage(error: unknown) {
   return 'Something went wrong.';
 }
 
+function normalizeDateBoundary(
+  value: string,
+  time: {
+    hours: number;
+    minutes: number;
+    seconds: number;
+    milliseconds: number;
+  },
+) {
+  if (!value) {
+    return undefined;
+  }
+
+  const [year, month, day] = value.split('-').map(Number);
+
+  if (!year || !month || !day) {
+    return undefined;
+  }
+
+  return new Date(
+    year,
+    month - 1,
+    day,
+    time.hours,
+    time.minutes,
+    time.seconds,
+    time.milliseconds,
+  ).toISOString();
+}
+
 export function normalizeFromDate(value: string) {
-  return value ? `${value}T00:00:00.000Z` : undefined;
+  return normalizeDateBoundary(value, {
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+    milliseconds: 0,
+  });
 }
 
 export function normalizeToDate(value: string) {
-  return value ? `${value}T23:59:59.999Z` : undefined;
+  return normalizeDateBoundary(value, {
+    hours: 23,
+    minutes: 59,
+    seconds: 59,
+    milliseconds: 999,
+  });
 }
 
 export function normalizeOptionalTextInput(value: string) {

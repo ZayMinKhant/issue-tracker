@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   createIssueSchema,
   getValidIssuePage,
+  normalizeFromDate,
   normalizeOptionalTextInput,
+  normalizeToDate,
   syncIssueDateRange,
   toUpdateIssueFormValues,
 } from '@issue-tracker/utils';
@@ -34,6 +36,20 @@ describe('normalizeOptionalTextInput', () => {
 
   it('returns a trimmed string for non-blank input', () => {
     expect(normalizeOptionalTextInput(' Front desk ')).toBe('Front desk');
+  });
+});
+
+describe('date normalization', () => {
+  it('converts the start of a selected local day to a UTC timestamp', () => {
+    expect(normalizeFromDate('2026-03-10')).toBe(
+      new Date(2026, 2, 10, 0, 0, 0, 0).toISOString(),
+    );
+  });
+
+  it('converts the end of a selected local day to a UTC timestamp', () => {
+    expect(normalizeToDate('2026-03-10')).toBe(
+      new Date(2026, 2, 10, 23, 59, 59, 999).toISOString(),
+    );
   });
 });
 

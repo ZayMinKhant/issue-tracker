@@ -17,6 +17,10 @@ model Issue {
   attachmentName String?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
+
+  @@index([createdAt])
+  @@index([status, createdAt])
+  @@index([category, createdAt])
 }
 
 enum IssueStatus {
