@@ -1,4 +1,5 @@
-import { render, screen, waitFor } from '@testing-library/react-native';
+import { act, render, screen, waitFor } from '@testing-library/react-native';
+import { Animated } from 'react-native';
 import App from '../App';
 import { getIssues } from '../src/features/issues/api/api';
 
@@ -54,7 +55,21 @@ jest.mock('@react-navigation/native', () => ({
       text: '#000',
     },
   },
-  NavigationContainer: ({ children }: { children: React.ReactNode }) => children,
+  NavigationContainer: ({
+    children,
+    onReady,
+  }: {
+    children: React.ReactNode;
+    onReady?: () => void;
+  }) => {
+    const React = require('react');
+
+    React.useEffect(() => {
+      onReady?.();
+    }, [onReady]);
+
+    return children;
+  },
 }));
 
 jest.mock('@react-navigation/native-stack', () => ({
@@ -122,6 +137,7 @@ jest.mock('../src/features/issues/api/api', () => ({
 
 const mockedGetIssues = jest.mocked(getIssues);
 const originalConsoleError = console.error;
+let animatedTimingSpy: jest.SpyInstance;
 
 beforeAll(() => {
   jest.spyOn(console, 'error').mockImplementation((message, ...args) => {
@@ -137,6 +153,26 @@ beforeAll(() => {
 
     originalConsoleError(message, ...args);
   });
+});
+
+beforeEach(() => {
+  jest.useFakeTimers();
+  animatedTimingSpy = jest.spyOn(Animated, 'timing').mockImplementation(
+    () =>
+      ({
+        reset: jest.fn(),
+        start: (callback?: Animated.EndCallback) => {
+          callback?.({ finished: true });
+        },
+        stop: jest.fn(),
+      }) as never,
+  );
+});
+
+afterEach(() => {
+  jest.runOnlyPendingTimers();
+  jest.useRealTimers();
+  animatedTimingSpy.mockRestore();
 });
 
 afterAll(() => {
@@ -156,6 +192,10 @@ describe('App', () => {
     });
 
     render(<App />);
+
+    act(() => {
+      jest.advanceTimersByTime(900);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('No issues match these filters')).toBeTruthy();
